@@ -7,6 +7,7 @@ use warp::{
     Filter,
     http::Method, 
     filters::{
+        body::BodyDeserializeError,
         cors::CorsForbidden,
     }, 
     reject::Reject, 
@@ -103,6 +104,11 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
         Ok(warp::reply::with_status(
             error.to_string(),
             StatusCode::FORBIDDEN,
+        ))
+    } else if let Some(error) = r.find::<BodyDeserializeError>() {
+        Ok(warp::reply::with_status(
+            error.to_string(),
+            StatusCode::UNPROCESSABLE_ENTITY,
         ))
     } else {
         Ok(warp::reply::with_status(
