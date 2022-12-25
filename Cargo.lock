@@ -499,6 +499,7 @@ name = "q-and-a-api-with-warp"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "tokio",
  "warp",
 ]
