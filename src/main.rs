@@ -42,7 +42,15 @@ struct Question {
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, Hash, PartialEq)]
 struct QuestionId(String);
 
-async fn get_questions(store: Store) -> Result<impl Reply, Rejection> {
+async fn get_questions(
+    params: HashMap<String, String>,
+    store: Store
+) -> Result<impl Reply, Rejection> {
+    let mut start = 0;
+    if let Some(n) = params.get("start") {
+       start = n.parse::<usize>().expect("Could not parse start");
+    }
+    println!("{}", start);
     let res: Vec<Question> = store.questions.values().cloned().collect();
 
     Ok(warp::reply::json(&res))
@@ -75,6 +83,7 @@ async fn main() {
     let get_items = warp::get()
         .and(warp::path("questions"))
         .and(warp::path::end())
+        .and(warp::query())
         .and(store_filter)
         .and_then(get_questions)
         .recover(return_error);
