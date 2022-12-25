@@ -1,5 +1,7 @@
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use warp::{
     Filter,
@@ -15,13 +17,13 @@ use warp::{
 
 #[derive(Clone)]
 struct Store {
-    questions: HashMap<QuestionId, Question>,
+    questions: Arc<RwLock<HashMap<QuestionId, Question>>>,
 }
 
 impl Store {
     fn new() -> Self {
         Self {
-            questions: Self::init(),
+            questions: Arc::new(RwLock::new(Self::init())),
         }
     }
 
@@ -48,11 +50,18 @@ async fn get_questions(
 ) -> Result<impl Reply, Rejection> {
     if !params.is_empty() {
         let pagination = extract_pagination(params)?;
-        let res: Vec<Question> = store.questions.values().cloned().collect();
+        let res: Vec<Question> = store
+            .questions
+            .read()
+            .await
+            .values()
+            .cloned()
+            .collect();
         let res = &res[pagination.start..pagination.end];
         Ok(warp::reply::json(&res))
     } else {
-        let res: Vec<Question> = store.questions.values().cloned().collect();
+        let res: Vec<Question> =
+    store.questions.read().await.values().cloned().collect();
         Ok(warp::reply::json(&res))
     }
 }
