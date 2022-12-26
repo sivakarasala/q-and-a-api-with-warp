@@ -3,10 +3,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::types::{
-  answer::{Answer, AnswerId},
-  question::{Question, QuestionId}
+    answer::{Answer, AnswerId},
+    question::{Question, QuestionId},
 };
-
 
 #[derive(Clone)]
 pub struct Store {

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::types::question::QuestionId;
 
@@ -9,5 +9,5 @@ pub struct AnswerId(pub String);
 pub struct Answer {
     pub id: AnswerId,
     pub content: String,
-    pub question_id: QuestionId
+    pub question_id: QuestionId,
 }
