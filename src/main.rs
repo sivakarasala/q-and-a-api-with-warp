@@ -11,9 +11,15 @@ mod types;
 #[tokio::main]
 async fn main() {
     let log_filter = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "q_and_a_api_with_warp=info,warp=error".to_owned());
+        .unwrap_or_else(|_| "handle_errors=warn,q_and_a_api_with_warp=info,warp=error".to_owned());
 
     let store = store::Store::new("postgres://postgres:password@localhost:5433/rustwebdev").await;
+
+    sqlx::migrate!()
+        .run(&store.clone().connection)
+        .await
+        .expect("Cannot run migration");
+
     let store_filter = warp::any().map(move || store.clone());
 
     tracing_subscriber::fmt()
