@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 warp = "0.3"
 tracing = { version = "0.1", features = ["log"] }
+reqwest = "0.11"
