@@ -4,6 +4,7 @@ use tracing::{event, Level};
 
 use handle_errors::Error;
 
+use crate::types::account::AccountId;
 use crate::types::answer::NewAnswer;
 use crate::types::question::NewQuestion;
 use crate::types::{
@@ -175,6 +176,25 @@ impl Store {
                     db_message = error.as_database_error().unwrap().message(),
                     contraint = error.as_database_error().unwrap().constraint().unwrap()
                 );
+                Err(Error::DatabaseQueryError(error))
+            }
+        }
+    }
+
+    pub async fn get_account(self, email: String) -> Result<Account, Error> {
+        match sqlx::query("SELECT * from accounts where email = $1")
+            .bind(email)
+            .map(|row: PgRow| Account {
+                id: Some(AccountId(row.get("id"))),
+                email: row.get("email"),
+                password: row.get("password"),
+            })
+            .fetch_one(&self.connection)
+            .await
+        {
+            Ok(account) => Ok(account),
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
                 Err(Error::DatabaseQueryError(error))
             }
         }
