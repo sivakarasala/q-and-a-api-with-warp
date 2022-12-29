@@ -7,6 +7,7 @@ use handle_errors::Error;
 use crate::types::answer::NewAnswer;
 use crate::types::question::NewQuestion;
 use crate::types::{
+    account::Account,
     answer::{Answer, AnswerId},
     question::{Question, QuestionId},
 };
@@ -145,6 +146,35 @@ impl Store {
             Ok(answer) => Ok(answer),
             Err(e) => {
                 event!(Level::ERROR, "{:?}", e);
+                Err(Error::DatabaseQueryError)
+            }
+        }
+    }
+
+    pub async fn add_account(self, account: Account) -> Result<bool, Error> {
+        match sqlx::query(
+            "INSERT INTO accounts (email, password)
+            VALUES ($1, $2)",
+        )
+        .bind(account.email)
+        .bind(account.password)
+        .execute(&self.connection)
+        .await
+        {
+            Ok(_) => Ok(true),
+            Err(error) => {
+                event!(
+                    Level::ERROR,
+                    code = error
+                        .as_database_error()
+                        .unwrap()
+                        .code()
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap(),
+                    db_message = error.as_database_error().unwrap().message(),
+                    contraint = error.as_database_error().unwrap().constraint().unwrap()
+                );
                 Err(Error::DatabaseQueryError)
             }
         }
