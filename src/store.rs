@@ -25,7 +25,7 @@ impl Store {
             .await
         {
             Ok(pool) => pool,
-            Err(e) => panic!("Couldn't establish DB connection: {}", e),
+            Err(error) => panic!("Couldn't establish DB connection: {}", error),
         };
 
         Self {
@@ -51,9 +51,9 @@ impl Store {
             .await
         {
             Ok(questions) => Ok(questions),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
@@ -77,9 +77,9 @@ impl Store {
         .await
         {
             Ok(question) => Ok(question),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
@@ -109,9 +109,9 @@ impl Store {
         .await
         {
             Ok(question) => Ok(question),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
@@ -124,9 +124,9 @@ impl Store {
         {
             // not working as expected, todo later
             Ok(_) => Ok(true),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
@@ -144,9 +144,9 @@ impl Store {
             .await
         {
             Ok(answer) => Ok(answer),
-            Err(e) => {
-                event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
@@ -175,7 +175,7 @@ impl Store {
                     db_message = error.as_database_error().unwrap().message(),
                     contraint = error.as_database_error().unwrap().constraint().unwrap()
                 );
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
