@@ -1,5 +1,6 @@
 #![warn(clippy::all)]
 
+use config::Config;
 use handle_errors::return_error;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
@@ -9,12 +10,50 @@ mod routes;
 mod store;
 mod types;
 
+#[derive(Debug, Default, serde::Deserialize, PartialEq)]
+struct Args {
+    log_level: String,
+    /// Database user
+    database_user: String,
+    /// Password to connect to database
+    database_password: String,
+    /// URL for the postgres database
+    database_host: String,
+    /// PORT number for the database connection
+    database_port: u16,
+    /// Database name
+    database_name: String,
+    /// Web server port
+    port: u16,
+}
+
 #[tokio::main]
 async fn main() {
-    let log_filter = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "handle_errors=warn,q_and_a_api_with_warp=info,warp=error".to_owned());
+    let config = Config::builder()
+        .add_source(config::File::with_name("setup"))
+        .build()
+        .unwrap();
 
-    let store = store::Store::new("postgres://postgres:password@localhost:5433/rustwebdev").await;
+    let config = config.try_deserialize::<Args>().unwrap();
+
+    let log_filter = std::env::var("RUST_LOG").unwrap_or_else(|_| {
+        format!(
+            "handle_errors={},q_and_a_api_with_warp={},warp={}",
+            config.log_level, config.log_level, config.log_level
+        )
+    });
+
+    let store = store::Store::new(&format!(
+        "postgres://{}:{}@{}:{}/{}",
+        config.database_user,
+        config.database_password,
+        config.database_host,
+        config.database_port,
+        config.database_name
+    ))
+    .await;
+
+    // let store = store::Store::new("postgres://postgres:password@localhost:5433/rustwebdev").await;
 
     sqlx::migrate!()
         .run(&store.clone().connection)
@@ -110,5 +149,5 @@ async fn main() {
         .with(warp::trace::request())
         .recover(return_error);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
 }
