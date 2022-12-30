@@ -1353,6 +1353,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
+name = "platforms"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8d0eef3571242013a0d5dc84861c3ae4a652e56e12adf8bdc26ff5f8cb34c94"
+
+[[package]]
 name = "poly1305"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1404,13 +1410,14 @@ dependencies = [
 
 [[package]]
 name = "q-and-a-api-with-warp"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "clap",
  "dotenv",
  "handle-errors",
  "paseto",
+ "platforms",
  "proc-macro2",
  "rand",
  "reqwest",

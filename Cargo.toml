@@ -1,6 +1,6 @@
 [package]
 name = "q-and-a-api-with-warp"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -25,3 +25,6 @@ chrono = "0.4.19"
 clap = { version = "3.1.7", features = ["derive"] }
 proc-macro2 = "1.0.37"
 dotenv = "0.15.0"
+
+[build-dependencies]
+platforms = "2.0.0"
