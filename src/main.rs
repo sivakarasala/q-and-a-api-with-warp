@@ -1,6 +1,6 @@
 #![warn(clippy::all)]
 
-use config::Config;
+use clap::Parser;
 use handle_errors::return_error;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
@@ -10,46 +10,51 @@ mod routes;
 mod store;
 mod types;
 
-#[derive(Debug, Default, serde::Deserialize, PartialEq)]
+/// Q&A web service API
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
 struct Args {
+    /// Which errors we want to log (info, warn or error)
+    #[clap(short, long, default_value = "warn")]
     log_level: String,
     /// Database user
+    #[clap(long, default_value = "postgres")]
     database_user: String,
     /// Password to connect to database
+    #[clap(long, default_value = "password")]
     database_password: String,
     /// URL for the postgres database
+    #[clap(long, default_value = "localhost")]
     database_host: String,
     /// PORT number for the database connection
+    #[clap(long, default_value = "5433")]
     database_port: u16,
     /// Database name
+    #[clap(long, default_value = "rustwebdev")]
     database_name: String,
     /// Web server port
+    #[clap(long, default_value = "8080")]
     port: u16,
 }
 
 #[tokio::main]
 async fn main() {
-    let config = Config::builder()
-        .add_source(config::File::with_name("setup"))
-        .build()
-        .unwrap();
-
-    let config = config.try_deserialize::<Args>().unwrap();
+    let args = Args::parse();
 
     let log_filter = std::env::var("RUST_LOG").unwrap_or_else(|_| {
         format!(
             "handle_errors={},q_and_a_api_with_warp={},warp={}",
-            config.log_level, config.log_level, config.log_level
+            args.log_level, args.log_level, args.log_level
         )
     });
 
     let store = store::Store::new(&format!(
         "postgres://{}:{}@{}:{}/{}",
-        config.database_user,
-        config.database_password,
-        config.database_host,
-        config.database_port,
-        config.database_name
+        args.database_user,
+        args.database_password,
+        args.database_host,
+        args.database_port,
+        args.database_name
     ))
     .await;
 
@@ -149,5 +154,5 @@ async fn main() {
         .with(warp::trace::request())
         .recover(return_error);
 
-    warp::serve(routes).run(([127, 0, 0, 1], config.port)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;
 }
