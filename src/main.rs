@@ -1,7 +1,9 @@
 #![warn(clippy::all)]
 
 use clap::Parser;
+use dotenv;
 use handle_errors::return_error;
+use std::env;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::{http::Method, Filter};
 
@@ -32,13 +34,26 @@ struct Args {
     /// Database name
     #[clap(long, default_value = "rustwebdev")]
     database_name: String,
-    /// Web server port
-    #[clap(long, default_value = "8080")]
-    port: u16,
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), handle_errors::Error> {
+    dotenv::dotenv().ok();
+
+    if let Err(_) = env::var("BAD_WORDS_API_KEY") {
+        panic!("BadWords API key not set");
+    }
+
+    if let Err(_) = env::var("PASETO_KEY") {
+        panic!("PASETO key not set");
+    }
+
+    let port = std::env::var("PORT")
+        .ok()
+        .map(|val| val.parse::<u16>())
+        .unwrap_or(Ok(8080))
+        .map_err(|e| handle_errors::Error::ParseError(e))?;
+
     let args = Args::parse();
 
     let log_filter = std::env::var("RUST_LOG").unwrap_or_else(|_| {
@@ -56,14 +71,15 @@ async fn main() {
         args.database_port,
         args.database_name
     ))
-    .await;
+    .await
+    .map_err(|e| handle_errors::Error::DatabaseQueryError(e))?;
 
     // let store = store::Store::new("postgres://postgres:password@localhost:5433/rustwebdev").await;
 
     sqlx::migrate!()
         .run(&store.clone().connection)
         .await
-        .expect("Cannot run migration");
+        .map_err(|e| handle_errors::Error::MigrationError(e))?;
 
     let store_filter = warp::any().map(move || store.clone());
 
@@ -154,5 +170,6 @@ async fn main() {
         .with(warp::trace::request())
         .recover(return_error);
 
-    warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
+    Ok(())
 }
