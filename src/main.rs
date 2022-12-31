@@ -13,6 +13,8 @@ mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), handle_errors::Error> {
+    dotenv::dotenv().ok();
+
     let config = config::Config::new().expect("Config can't be set");
     let log_filter = format!(
         "handle_errors={},rust_web_dev={},warp={}",

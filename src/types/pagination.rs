@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 /// Pagination struct that is getting extracted
 /// from query params
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct Pagination {
     /// The index of the last item that has to be returned
     pub limit: Option<u32>,
