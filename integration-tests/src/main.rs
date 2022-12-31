@@ -40,8 +40,8 @@ async fn main() -> Result<(), handle_errors::Error> {
         .arg("drop")
         .arg("--database-url")
         .arg(format!(
-            "postgres://{}:{}/{}",
-            config.db_host, config.db_port, config.db_name
+            "postgres://{}:{}@{}:{}/{}",
+            config.db_user, config.db_password, config.db_host, config.db_port, config.db_name
         ))
         .arg("-y")
         .output()
@@ -54,8 +54,8 @@ async fn main() -> Result<(), handle_errors::Error> {
         .arg("create")
         .arg("--database-url")
         .arg(format!(
-            "postgres://{}:{}/{}",
-            config.db_host, config.db_port, config.db_name
+            "postgres://{}:{}@{}:{}/{}",
+            config.db_user, config.db_password, config.db_host, config.db_port, config.db_name
         ))
         .output()
         .expect("sqlx command failed to start");
